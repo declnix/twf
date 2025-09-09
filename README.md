@@ -22,6 +22,69 @@ Installation
 brew install --HEAD wvanlint/twf/twf
 ```
 
+### Using Nix (with Flakes)
+
+Run `twf` directly:
+```sh
+nix run github:wvanlint/twf
+```
+
+Or, add `twf` to your system configuration:
+
+1.  Add `twf` to your `flake.nix` inputs:
+    ```nix
+    # flake.nix
+    {
+      inputs = {
+        twf.url = "github:wvanlint/twf";
+        # ... other inputs
+      };
+
+      outputs = { self, nixpkgs, twf, ... }@inputs: {
+        # ...
+      };
+    }
+    ```
+
+2.  Add the `twf` package to your `home.packages` in your `home-manager` configuration:
+    ```nix
+    # home.nix
+    {
+      home.packages = with pkgs; [
+        inputs.twf.packages.${pkgs.system}.default
+      ];
+    }
+    ```
+
+### Using as an Overlay
+
+You can also use the `twf` flake as an overlay to include the `twf` package in your system's `nixpkgs` instance.
+
+1.  Add `twf` to your `flake.nix` inputs:
+    ```nix
+    # flake.nix
+    {
+      inputs = {
+        nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+        twf.url = "github:wvanlint/twf";
+        # ... other inputs
+      };
+
+      outputs = { self, nixpkgs, twf, ... }@inputs: {
+        nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            ({ pkgs, ... }: {
+              nixpkgs.overlays = [ twf.overlays.default ];
+              environment.systemPackages = [ pkgs.twf ];
+            })
+            # ... other modules
+          ];
+        };
+      };
+    }
+    ```
+
 ### Using Go
 
 Install Go, and ensure that `$GOPATH/bin` is added to the `$PATH`.
